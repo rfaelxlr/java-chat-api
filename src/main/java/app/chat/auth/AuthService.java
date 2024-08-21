@@ -48,7 +48,7 @@ public class AuthService {
 
     public UserResponseDTO getUserProfile(Long id) {
         if(!id.equals(getAuthenticatedUser().getId())){
-            throw new UsernameNotFoundException("User not found");
+            throw new SecurityException("You can only access your profile");
         }
         User user = userService.findById(id).orElseThrow();
         return UserResponseDTO.fromUser(user);
