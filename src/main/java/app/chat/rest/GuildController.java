@@ -2,6 +2,7 @@ package app.chat.rest;
 
 import app.chat.domain.vo.CreateChannelDTO;
 import app.chat.domain.vo.CreateGuildDTO;
+import app.chat.domain.vo.MessageDTO;
 import app.chat.service.GuildService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -67,5 +68,21 @@ public class GuildController {
     @PostMapping("/{guildId}/channels/{channelId}")
     public ResponseEntity<?> enterLeaveChannel(@PathVariable Long guildId, @PathVariable Long channelId, @RequestParam(defaultValue = "true") boolean enter) {
         return ResponseEntity.ok().body(guildService.enterChannel(guildId, channelId, enter));
+    }
+
+    @GetMapping("/{guildId}/channels/{channelId}/messages")
+    public ResponseEntity<?> getChannelMessages(@PathVariable Long guildId, @PathVariable Long channelId) throws Exception {
+        return ResponseEntity.ok().body(guildService.getChannelMessages(channelId));
+    }
+
+    @PostMapping("/{guildId}/channels/{channelId}/messages")
+    public ResponseEntity<?> sendMessageToChannel(@PathVariable Long guildId, @PathVariable Long channelId, @RequestBody MessageDTO message) throws Exception {
+        return ResponseEntity.ok().body(guildService.sendMessage(channelId, message));
+    }
+
+    @DeleteMapping("/{guildId}/channels/{channelId}/messages/{messageId}")
+    public ResponseEntity<?> sendMessageToChannel(@PathVariable Long guildId, @PathVariable Long channelId, @PathVariable Long messageId) throws Exception {
+        guildService.deleteMessage(channelId, messageId);
+        return ResponseEntity.ok().build();
     }
 }

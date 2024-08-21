@@ -5,15 +5,19 @@ import app.chat.domain.Channel;
 import app.chat.domain.ChannelUser;
 import app.chat.domain.Guild;
 import app.chat.domain.GuildUser;
+import app.chat.domain.Message;
 import app.chat.domain.User;
 import app.chat.domain.vo.CreateChannelDTO;
 import app.chat.domain.vo.CreateGuildDTO;
 import app.chat.domain.vo.GuildResponseDTO;
+import app.chat.domain.vo.MessageDTO;
+import app.chat.domain.vo.MessageResponseDTO;
 import app.chat.domain.vo.UserResponseDTO;
 import app.chat.repository.ChannelRepository;
 import app.chat.repository.ChannelUserRepository;
 import app.chat.repository.GuildRepository;
 import app.chat.repository.GuildUserRepository;
+import app.chat.repository.MessageRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +31,7 @@ public class GuildService {
     private final GuildUserRepository guildUserRepository;
     private final ChannelRepository channelRepository;
     private final ChannelUserRepository channelUserRepository;
+    private final MessageRepository messageRepository;
     private final AuthService authService;
 
     public List<GuildResponseDTO> listAllAvailable() {
@@ -134,5 +139,36 @@ public class GuildService {
         return CreateChannelDTO.fromChannel(channel);
     }
 
+    public List<MessageResponseDTO> getChannelMessages(Long channelId) throws Exception {
+        User user = authService.getAuthenticatedUser();
+        if (!channelUserRepository.userInChannel(user.getId(), channelId)) {
+            throw new Exception("You are not in this channel");
+        }
+        return messageRepository.findByChannelIdAndGuildAndUser(user.getId(), channelId).stream().map(MessageResponseDTO::fromMessage).toList();
+    }
+
+
+    public MessageResponseDTO sendMessage(Long channelId, MessageDTO messageDTO) throws Exception {
+        User user = authService.getAuthenticatedUser();
+        if (!channelUserRepository.userInChannel(user.getId(), channelId)) {
+            throw new Exception("You are not in this channel");
+        }
+        Message message = messageRepository.save(Message.builder()
+                .content(messageDTO.getContent())
+                .channel(channelRepository.findById(channelId).orElseThrow())
+                .author(user)
+                .build());
+        return MessageResponseDTO.fromMessage(message);
+    }
+
+
+    public void deleteMessage(Long channelId, Long messageId) throws Exception {
+        User user = authService.getAuthenticatedUser();
+        if (!channelUserRepository.userInChannel(user.getId(), channelId)) {
+            throw new Exception("You are not in this channel");
+        }
+
+        messageRepository.deleteMessage(messageId, user.getId());
+    }
 }
 

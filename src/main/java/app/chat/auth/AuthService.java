@@ -3,6 +3,7 @@ package app.chat.auth;
 import app.chat.domain.User;
 import app.chat.domain.vo.CreateUserDTO;
 import app.chat.domain.vo.LoginUserDTO;
+import app.chat.domain.vo.UserResponseDTO;
 import app.chat.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -42,5 +44,13 @@ public class AuthService {
             return (User) userDetails;
         }
         return null;
+    }
+
+    public UserResponseDTO getUserProfile(Long id) {
+        if(!id.equals(getAuthenticatedUser().getId())){
+            throw new UsernameNotFoundException("User not found");
+        }
+        User user = userService.findById(id).orElseThrow();
+        return UserResponseDTO.fromUser(user);
     }
 }
